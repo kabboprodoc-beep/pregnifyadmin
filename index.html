@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pregnify Admin • Mobile Native App</title>
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Chart.js for Visual Revenue Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.5; padding-bottom: 75px; }
+
+        /* Native App Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header-brand { display: flex; align-items: center; gap: 8px; font-size: 1.1em; font-weight: 700; }
+        .header-brand .material-icons { font-size: 24px; }
+        
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .user-info-badge { display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.15); padding: 4px 10px; border-radius: 50px; font-size: 0.75em; border: 1px solid rgba(255,255,255,0.2); }
+        
+        .gear-btn {
+            background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+        }
+        .gear-btn:hover { background: rgba(255, 255, 255, 0.35); }
+
+        main { max-width: 500px; margin: 12px auto; padding: 0 12px; }
+
+        /* App Tab Views */
+        .app-view { display: none; }
+        .app-view.active-view { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Analytics Dashboard Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: var(--card-bg); padding: 14px; border-radius: 14px;
+            border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .stat-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;
+            flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .stat-info h3 { font-size: 1.2em; font-weight: 700; color: var(--text-main); line-height: 1.1; }
+        .stat-info p { font-size: 0.72em; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+        /* Card Container */
+        .card {
+            background: var(--card-bg); border-radius: 16px; padding: 16px; margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03); border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1em; font-weight: 700; color: var(--text-main); margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+        }
+        .card-title span { display: flex; align-items: center; gap: 6px; }
+
+        /* Toolbar / Search & Filter Controls */
+        .table-toolbar {
+            display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+        }
+        .search-filter-group { display: flex; gap: 8px; width: 100%; }
+        .search-filter-group input { flex: 2; padding: 8px 12px; font-size: 0.85em; }
+        .search-filter-group select { flex: 1; padding: 8px 10px; font-size: 0.85em; }
+
+        /* Form Controls */
+        input, select, textarea {
+            padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 10px;
+            font-size: 0.88em; outline: none; transition: all 0.2s; background: #fff; color: var(--text-main); width: 100%;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        .gen-grid {
+            display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 12px;
+        }
+
+        /* Buttons */
+        button {
+            padding: 9px 16px; border: none; border-radius: 10px; background: var(--primary); color: #fff;
+            cursor: pointer; font-weight: 600; font-size: 0.85em; display: inline-flex; align-items: center;
+            justify-content: center; gap: 6px; transition: all 0.2s; box-shadow: 0 3px 10px rgba(79, 70, 229, 0.2);
+            white-space: nowrap;
+        }
+        button:hover { filter: brightness(1.1); }
+        button:active { transform: scale(0.98); }
+        button.btn-danger { background: var(--danger); }
+        button.btn-secondary { background: var(--text-muted); }
+        button.btn-success { background: var(--success); }
+        button.btn-warning { background: var(--warning); color: #fff; }
+        button.btn-purple { background: var(--purple); }
+        button.btn-eye { background: #0284c7; padding: 5px 10px; font-size: 0.75em; border-radius: 8px; }
+
+        textarea { width: 100%; resize: vertical; font-size: 0.85em; }
+
+        /* Tables & Data Grids */
+        .table-wrapper { overflow-x: auto; margin-top: 8px; border-radius: 10px; border: 1px solid var(--border); }
+        table { width: 100%; min-width: 580px; border-collapse: collapse; font-size: 0.8em; text-align: left; background: #fff; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { background: #f8fafc; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.7em; letter-spacing: 0.5px; white-space: nowrap; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Badges & Status */
+        .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 50px; font-size: 0.68em; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+        .badge.ok { background: #d1fae5; color: #065f46; }
+        .badge.bad { background: #fee2e2; color: #991b1b; }
+        .badge.pending { background: #fef3c7; color: #d97706; }
+        .badge.promo { background: #ede9fe; color: #6d28d9; }
+        .badge.exp-warn { background: #fef3c7; color: #d97706; }
+
+        /* Compact action buttons */
+        .action-btns { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+        .action-btns button { padding: 5px 8px; font-size: 0.72em; border-radius: 6px; box-shadow: none; }
+
+        /* Native Bottom Navigation Bar (5 Tabs) */
+        #bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 62px;
+            background: #ffffff; border-top: 1px solid var(--border);
+            display: grid; grid-template-columns: repeat(5, 1fr); z-index: 1500;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.06);
+        }
+        .nav-item {
+            background: none; border: none; box-shadow: none; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 0.65em; font-weight: 600; cursor: pointer; gap: 2px;
+            transition: color 0.2s;
+        }
+        .nav-item .material-icons { font-size: 20px; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active .material-icons { transform: translateY(-2px); }
+
+        /* Toast Popup Notification for Copy */
+        #toast-notification {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 50px;
+            font-size: 0.85em; font-weight: 500; z-index: 4000; opacity: 0; visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px;
+        }
+        #toast-notification.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+        /* Modal Popup Style */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(5px); z-index: 3000; display: none;
+            align-items: center; justify-content: center; padding: 16px;
+        }
+        .modal-card {
+            background: #fff; width: 100%; max-width: 400px; border-radius: 20px;
+            padding: 24px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-header h3 { font-size: 1.1em; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .modal-body .form-group { margin-bottom: 14px; }
+        .modal-body label { display: block; font-size: 0.8em; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        /* Login Screen Overlay */
+        #auth-screen {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px); z-index: 2000; display: flex;
+            align-items: center; justify-content: center; padding: 16px;
+        }
+        .auth-card { background: #fff; padding: 35px 25px; border-radius: 24px; text-align: center; max-width: 380px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .auth-card h2 { margin-bottom: 8px; color: var(--text-main); font-weight: 700; font-size: 1.35em; }
+        .auth-card p { color: var(--text-muted); font-size: 0.85em; margin-bottom: 24px; }
+    </style>
+</head>
+<body>
+
+    <!-- Authentication / Login Screen -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <span class="material-icons" style="font-size: 48px; color: var(--primary); margin-bottom: 12px;">admin_panel_settings</span>
+            <h2>Pregnify Admin</h2>
+            <p>Please sign in with your Google account to access the dashboard</p>
+            <button id="lg" style="width: 100%; padding: 11px; font-size: 0.95em;">
+                <span class="material-icons" style="font-size: 18px;">login</span> Google Login
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Popup for Copy -->
+    <div id="toast-notification">
+        <span class="material-icons" style="color: #4ade80; font-size: 18px;">check_circle</span>
+        <span id="toast-msg">License copied to clipboard!</span>
+    </div>
+
+    <!-- Main Native App Header -->
+    <header>
+        <div class="header-brand">
+            <span class="material-icons">security</span>
+            <span>Pregnify Admin</span>
+        </div>
+        <div class="header-right">
+            <!-- Gear / Settings Button for Backup & Restore -->
+            <button class="gear-btn" onclick="openSettingsModal()" title="System Backup & Settings">
+                <span class="material-icons" style="font-size: 18px;">settings</span>
+            </button>
+            <div class="user-info-badge">
+                <span id="who">Admin</span>
+                <button id="lg-top" class="btn-secondary" style="padding: 3px 8px; font-size: 0.7em; margin-left: 4px;">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="app" style="display:none;">
+        
+        <!-- TAB 1: DASHBOARD / OVERVIEW -->
+        <div id="tab-dashboard" class="app-view active-view">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--primary);">
+                        <span class="material-icons">vpn_key</span>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-total-lic">0</h3>
+                        <p>Total Lic</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--success);">
+                        <span class="material-icons">check_circle</span>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-unused-lic">0</h3>
+                        <p>Unused</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--warning);">
+                        <span class="material-icons">verified</span>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-active-users">0</h3>
+                        <p>Active Users</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--danger);">
+                        <span class="material-icons">block</span>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-blocked-count">0</h3>
+                        <p>Blocked</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="stat-icon" style="background: #0d9488;">
+                        <span class="material-icons">payments</span>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-total-revenue">৳0</h3>
+                        <p>Total Revenue (Month: <span id="stat-month-revenue">৳0</span>)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Revenue Chart Section -->
+            <div class="card">
+                <div class="card-title">
+                    <span><span class="material-icons" style="font-size: 18px; color: var(--primary);">bar_chart</span> Monthly Revenue Trends</span>
+                </div>
+                <div style="position: relative; height: 180px; width: 100%;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quick Action Info Card -->
+            <div class="card" style="background: linear-gradient(135deg, #e0e7ff, #f8fafc); border-color: #c7d2fe;">
+                <h4 style="font-size: 0.95em; color: var(--primary-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span class="material-icons" style="font-size: 18px;">info</span> Quick Navigation
+                </h4>
+                <p style="font-size: 0.8em; color: var(--text-muted);">Use the bottom navigation bar to switch between Generator, Analytics, Users, and Broadcast effortlessly.</p>
+            </div>
+        </div>
+
+        <!-- TAB 2: LICENSES & PROMO -->
+        <div id="tab-licenses" class="app-view">
+            <!-- License Generation Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span><span class="material-icons" style="font-size: 18px;">vpn_key</span> Generate Licenses</span>
+                </div>
+                <div class="gen-grid">
+                    <select id="days" onchange="handlePackageSelection()">
+                        <option value="30">30 Days (1 Month)</option>
+                        <option value="90">90 Days (3 Months)</option>
+                        <option value="180">180 Days (6 Months)</option>
+                        <option value="365">1 Year</option>
+                        <option value="36500">Lifetime Pro</option>
+                        <option value="custom">➕ Custom Package...</option>
+                    </select>
+                    <input id="price" type="number" placeholder="Price (৳)" value="500">
+                    <input id="discount" type="number" placeholder="Discount (৳)" value="0">
+                    <input id="qty" type="number" value="1" min="1" max="50" placeholder="Qty">
+                    <input id="note" placeholder="Buyer Name / Note">
+                    <button id="gen"><span class="material-icons" style="font-size: 16px;">add_circle</span> Generate</button>
+                </div>
+                <textarea id="out" rows="2" readonly placeholder="Generated plain license codes will appear here..."></textarea>
+            </div>
+
+            <!-- Special Promo Codes Generation Card -->
+            <div class="card" style="border-left: 4px solid var(--purple);">
+                <div class="card-title">
+                    <span><span class="material-icons" style="font-size: 18px; color: var(--purple);">local_offer</span> Special Promo Codes</span>
+                </div>
+                <div class="gen-grid">
+                    <input id="promo-code-input" type="text" placeholder="Code (e.g. SPECIAL50)">
+                    <input id="promo-discount" type="number" placeholder="Discount (৳)" value="100">
+                    <input id="promo-reason" type="text" placeholder="Reason (e.g. Campaign)">
+                    <button class="btn-purple" id="gen-promo"><span class="material-icons" style="font-size: 16px;">loyalty</span> Create</button>
+                </div>
+                <div class="table-wrapper" style="margin-top: 10px;">
+                    <table id="promo-table"></table>
+                </div>
+            </div>
+
+            <!-- Licenses Management Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span><span class="material-icons" style="font-size: 18px;">card_membership</span> License Database</span>
+                    <button class="btn-success" onclick="exportTableToCSV('licenses_list.csv')" style="padding: 5px 10px; font-size: 0.75em;"><span class="material-icons" style="font-size: 14px;">download</span> Export</button>
+                </div>
+                <div class="table-toolbar">
+                    <div class="search-filter-group">
+                        <input type="text" id="lic-search" placeholder="Search by note or code..." onkeyup="ll()">
+                        <select id="lic-filter" onchange="ll()">
+                            <option value="all">All Status</option>
+                            <option value="unused">Unused</option>
+                            <option value="used">Used</option>
+                            <option value="blocked">Blocked</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="lt"></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: USERS MANAGEMENT -->
+        <div id="tab-users" class="app-view">
+            <div class="card">
+                <div class="card-title">
+                    <span><span class="material-icons" style="font-size: 18px;">group</span> User Management</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn-success" onclick="exportTableToCSV('users_list.csv')" style="padding: 5px 10px; font-size: 0.75em;"><span class="material-icons" style="font-size: 14px;">download</span> Export</button>
+                        <button class="btn-secondary" id="ru" style="padding: 5px 10px; font-size: 0.75em;"><span class="material-icons" style="font-size: 14px;">refresh</span></button>
+                    </div>
+                </div>
+                <div class="table-toolbar">
+                    <div class="search-filter-group">
+                        <input type="text" id="user-search" placeholder="Search by name or email..." onkeyup="lu()">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="ut"></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: BROADCAST / NOTIFICATIONS -->
+        <div id="tab-broadcast" class="app-view">
+            <div class="card" style="border-left: 4px solid var(--primary);">
+                <div class="card-title">
+                    <span><span class="material-icons" style="font-size: 18px; color: var(--primary);">campaign</span> In-App Broadcast Notice</span>
+                </div>
+                <p style="font-size: 0.82em; color: var(--text-muted); margin-bottom: 14px;">Send real-time announcements or offers directly to user app dashboards.</p>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.8em; font-weight: 600; margin-bottom: 4px; display:block;">Notice Title:</label>
+                    <input type="text" id="bc-title" placeholder="e.g. Special Eid Offer!" oninput="updateBroadcastPreview()">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.8em; font-weight: 600; margin-bottom: 4px; display:block;">Notice Message:</label>
+                    <textarea id="bc-msg" rows="3" placeholder="Write your broadcast announcement here..." oninput="updateBroadcastPreview()"></textarea>
+                </div>
+                <button class="btn-success" onclick="sendBroadcastNotice()" style="width: 100%;">
+                    <span class="material-icons" style="font-size: 16px;">send</span> Publish Broadcast
+                </button>
+            </div>
+
+            <!-- Live Preview Card for Broadcast Notice -->
+            <div class="card" style="background: #faf5ff; border: 1.5px dashed var(--purple);">
+                <div class="card-title" style="margin-bottom: 8px;">
+                    <span style="font-size: 0.9em; color: var(--purple);"><span class="material-icons" style="font-size: 16px;">visibility</span> Live App Preview</span>
+                </div>
+                <div style="background: #fff; padding: 14px; border-radius: 12px; box-shadow: 0 4px 12px rgba(139,92,246,0.1); border: 1px solid #e9d5ff;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <span class="material-icons" style="color: var(--purple); font-size: 20px;">notifications_active</span>
+                        <h4 id="prev-title" style="font-size: 0.95em; font-weight: 700; color: #1e1b4b;">Special Notice Title</h4>
+                    </div>
+                    <p id="prev-msg" style="font-size: 0.8em; color: #4b5563; line-height: 1.4;">Your broadcast message preview will appear here in real-time as you type above...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: CONTENT MANAGER (Full-Screen) -->
+        <div id="tab-content" class="app-view">
+            <div class="card" style="min-height: 78vh;">
+                <div class="card-title">
+                    <span><span class="material-icons" style="font-size: 18px;">edit_note</span> Content Manager (<span id="c-count">0</span>)</span>
+                    <button class="btn-success" onclick="cNew()" style="padding: 5px 10px; font-size: 0.75em;"><span class="material-icons" style="font-size: 14px;">add</span> Add</button>
+                </div>
+                <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                    <select id="c-type" onchange="cLoad()" style="flex: 2; padding: 7px; font-size: 0.82em;">
+                        <option value="drugs">Drugs & Meds</option>
+                        <option value="guides">Guidelines</option>
+                        <option value="diseases">Diseases</option>
+                    </select>
+                    <input type="text" id="c-q" placeholder="Search..." oninput="cRender()" style="flex: 2; padding: 7px; font-size: 0.82em;">
+                    <button class="btn-secondary" onclick="cSeed()" style="padding: 5px 8px; font-size: 0.75em;" title="Seed Database">Seed</button>
+                </div>
+                <div id="c-ed" style="display:none; margin-bottom: 10px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid var(--border);">
+                    <textarea id="c-json" rows="12" style="width:100%; font-family:monospace; font-size:11px; padding:8px;"></textarea>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                        <button class="btn-success" onclick="cSave()" style="padding:5px 10px; font-size:0.75em;">Save</button>
+                        <button class="btn-secondary" onclick="$('c-ed').style.display='none'" style="padding:5px 10px; font-size:0.75em;">Cancel</button>
+                    </div>
+                </div>
+                <div id="c-list" style="max-height: 60vh; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Native App Bottom Navigation Bar (5 Tabs) -->
+    <nav id="bottom-nav" style="display: none;">
+        <button class="nav-item active" onclick="switchTab('dashboard', this)">
+            <span class="material-icons">dashboard</span>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('licenses', this)">
+            <span class="material-icons">vpn_key</span>
+            <span>Licenses</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('users', this)">
+            <span class="material-icons">group</span>
+            <span>Users</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('broadcast', this)">
+            <span class="material-icons">campaign</span>
+            <span>Notice</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('content', this); cLoad();">
+            <span class="material-icons">edit_note</span>
+            <span>Content</span>
+        </button>
+    </nav>
+
+    <!-- System Settings / Backup & Bulk Import Modal Popup -->
+    <div id="settings-modal" class="modal-overlay" onclick="closeSettingsModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3><span class="material-icons" style="color: var(--primary);">settings</span> Backup & Bulk Import</h3>
+                <button class="btn-secondary" onclick="closeSettingsModal()" style="padding: 4px; border-radius: 50%;"><span class="material-icons" style="font-size: 16px;">close</span></button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <p style="font-size: 0.82em; color: var(--text-muted); margin-bottom: 12px;">Export/Restore database backup or import bulk codes below.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                    <button class="btn-success" onclick="exportDatabaseJSON()" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-size: 0.82em;">
+                        <span class="material-icons" style="font-size: 18px;">file_download</span> Export Database (JSON)
+                    </button>
+                    <button class="btn-purple" onclick="$('import-file-input').click()" style="width: 100%; justify-content: flex-start; padding: 10px 14px; font-size: 0.82em;">
+                        <span class="material-icons" style="font-size: 18px;">file_upload</span> Restore Database (JSON)
+                    </button>
+                    <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importDatabaseJSON(this)">
+                </div>
+
+                <hr style="border:0; border-top:1px solid var(--border); margin-bottom: 16px;">
+
+                <!-- Bulk Code Import Section (Fixed Logic) -->
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label style="font-size: 0.82em; font-weight: 700; color: var(--primary-dark);">Bulk Code Import:</label>
+                    <p style="font-size: 0.75em; color: var(--text-muted); margin-bottom: 6px;">Format per line: <b>CODE DAYS</b> (e.g. KABBO30 30)</p>
+                    <textarea id="c-codes" rows="4" placeholder="KABBO30 30&#10;PRO90 90" style="font-size: 0.82em;"></textarea>
+                </div>
+                <button class="btn-success" onclick="cCodes()" style="width:100%; font-size:0.82em; padding:9px;">Import Codes Now</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeSettingsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Package Creation Modal -->
+    <div id="custom-pkg-modal" class="modal-overlay" onclick="closeCustomPkgModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><span class="material-icons" style="color: var(--primary);">add_box</span> Custom Package</h3>
+                <button class="btn-secondary" onclick="closeCustomPkgModal()" style="padding: 4px; border-radius: 50%;"><span class="material-icons" style="font-size: 16px;">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Duration (Days):</label>
+                    <input type="number" id="custom-pkg-days" placeholder="e.g. 45, 120">
+                </div>
+                <div class="form-group">
+                    <label>Price (৳):</label>
+                    <input type="number" id="custom-pkg-price" placeholder="e.g. 750">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeCustomPkgModal()">Cancel</button>
+                <button class="btn-success" onclick="saveCustomPackage()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Edit Modal Popup -->
+    <div id="edit-modal" class="modal-overlay" onclick="closeEditModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><span class="material-icons" style="color: var(--warning);">edit</span> Edit License</h3>
+                <button class="btn-secondary" onclick="closeEditModal()" style="padding: 4px; border-radius: 50%;"><span class="material-icons" style="font-size: 16px;">close</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-lic-id">
+                <div class="form-group">
+                    <label>Note / Buyer Name:</label>
+                    <input type="text" id="edit-lic-note">
+                </div>
+                <div class="form-group">
+                    <label>Validity (Days):</label>
+                    <input type="number" id="edit-lic-days">
+                </div>
+                <div class="form-group">
+                    <label>Price (৳):</label>
+                    <input type="number" id="edit-lic-price">
+                </div>
+                <div class="form-group">
+                    <label>Discount (৳):</label>
+                    <input type="number" id="edit-lic-discount">
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="edit-lic-status">
+                        <option value="unused">Unused</option>
+                        <option value="used">Used</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-success" onclick="saveLicenseEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Edit Modal Popup (With Activation & Expiry Date Management) -->
+    <div id="user-edit-modal" class="modal-overlay" onclick="closeUserEditModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><span class="material-icons" style="color: var(--warning);">edit</span> Edit User & Subscription</h3>
+                <button class="btn-secondary" onclick="closeUserEditModal()" style="padding: 4px; border-radius: 50%;"><span class="material-icons" style="font-size: 16px;">close</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label>User Name:</label>
+                    <input type="text" id="edit-user-name" placeholder="Enter name">
+                </div>
+                <div class="form-group">
+                    <label>User Email:</label>
+                    <input type="email" id="edit-user-email" placeholder="Enter email">
+                </div>
+                <div class="form-group">
+                    <label>Account Status:</label>
+                    <select id="edit-user-status">
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Activation Date:</label>
+                    <input type="date" id="edit-user-act-date">
+                </div>
+                <div class="form-group">
+                    <label>Validity (Days):</label>
+                    <input type="number" id="edit-user-days" placeholder="e.g. 30, 365">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeUserEditModal()">Cancel</button>
+                <button class="btn-success" onclick="saveUserEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grant Premium Subscription Modal (With Pending, Active, Blocked & Custom Duration) -->
+    <div id="grant-modal" class="modal-overlay" onclick="closeGrantModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><span class="material-icons" style="color: var(--success);">card_membership</span> Grant Premium Access</h3>
+                <button class="btn-secondary" onclick="closeGrantModal()" style="padding: 4px; border-radius: 50%;"><span class="material-icons" style="font-size: 16px;">close</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="grant-user-id">
+                <p style="font-size: 0.82em; color: var(--text-muted); margin-bottom: 12px;">Grant subscription access and set status directly:</p>
+                <div class="form-group">
+                    <label>Select Duration:</label>
+                    <select id="grant-days-select">
+                        <option value="30">30 Days (1 Month)</option>
+                        <option value="90">90 Days (3 Months)</option>
+                        <option value="180">180 Days (6 Months)</option>
+                        <option value="365">1 Year</option>
+                        <option value="36500">Lifetime Pro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Initial Status:</label>
+                    <select id="grant-status-select">
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Custom Note / Reason:</label>
+                    <input type="text" id="grant-note" value="Admin Direct Grant">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeGrantModal()">Cancel</button>
+                <button class="btn-success" onclick="confirmGrantPremium()">Grant Access</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Reveal / View Modal Popup -->
+    <div id="reveal-modal" class="modal-overlay" onclick="closeRevealModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><span class="material-icons" style="color: var(--primary);">vpn_key</span> License Details</h3>
+                <button class="btn-secondary" onclick="closeRevealModal()" style="padding: 4px; border-radius: 50%;"><span class="material-icons" style="font-size: 16px;">close</span></button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 6px;">Plain License Code:</p>
+                <div style="background: #f8fafc; border: 2px dashed var(--primary); padding: 12px; border-radius: 12px; margin-bottom: 14px;">
+                    <code id="reveal-code-text" style="font-size: 1.1em; font-weight: bold; color: var(--primary); word-break: break-all;">---</code>
+                </div>
+                <p style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 6px;">Hash ID:</p>
+                <code id="reveal-hash-text" style="font-size: 0.72em; color: var(--text-muted); word-break: break-all; display: block; background: #f1f5f9; padding: 6px; border-radius: 6px;">---</code>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 8px;">
+                <button class="btn-wa" id="reveal-wa-btn" style="flex: 1;">
+                    <span class="material-icons" style="font-size: 16px;">share</span> WhatsApp
+                </button>
+                <button class="btn-success" id="reveal-copy-btn" style="flex: 1;">
+                    <span class="material-icons" style="font-size: 16px;">content_copy</span> Copy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Compat Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="pedia-drugs.js"></script>
+    <script src="medical-content.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        firebase.initializeApp({
+            apiKey: "AIzaSyBA9QDUvG1XXB-vTbeqQ7TUizfro98p81Q",
+            authDomain: "pregnifypro.firebaseapp.com",
+            projectId: "pregnifypro",
+            storageBucket: "pregnifypro.firebasestorage.app",
+            messagingSenderId: "744789052058",
+            appId: "1:744789052058:web:9ed2be4f4fa64ff257ed23"
+        });
+
+        var auth = firebase.auth(), db = firebase.firestore(), FV = firebase.firestore.FieldValue, $ = function(i){ return document.getElementById(i); };
+
+        function rnd() {
+            var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', a = new Uint32Array(12);
+            crypto.getRandomValues(a);
+            var s = Array.from(a).map(function(x) { return A[x % A.length]; }).join('');
+            return s.slice(0, 4) + '-' + s.slice(4, 8) + '-' + s.slice(8);
+        }
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+        function dt(t) { return t && t.toDate ? t.toDate().toLocaleString('en-GB') : '—'; }
+
+        // Copy to Clipboard with Toast Popup Notification
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                var toast = $('toast-notification');
+                $('toast-msg').innerText = "Copied: " + text;
+                toast.classList.add('show');
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 2000);
+            }, function(err) {
+                alert('Failed to copy: ' + err);
+            });
+        }
+
+        // Tab Navigation Switcher
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active-view'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            $('tab-' + tabId).classList.add('active-view');
+            if(btnElement) btnElement.classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // Modal Controls
+        function openSettingsModal() { $('settings-modal').style.display = 'flex'; }
+        function closeSettingsModal() { $('settings-modal').style.display = 'none'; }
+
+        function openCustomPkgModal() { $('custom-pkg-modal').style.display = 'flex'; }
+        function closeCustomPkgModal() { $('custom-pkg-modal').style.display = 'none'; $('days').value = "30"; }
+
+        function openEditModal(id, note, days, price, discount, status) {
+            $('edit-lic-id').value = id;
+            $('edit-lic-note').value = note;
+            $('edit-lic-days').value = days;
+            $('edit-lic-price').value = price || 0;
+            $('edit-lic-discount').value = discount || 0;
+            $('edit-lic-status').value = status;
+            $('edit-modal').style.display = 'flex';
+        }
+        function closeEditModal() { $('edit-modal').style.display = 'none'; }
+
+        function openUserEditModal(id, name, email, status, activatedAt, licenseId) {
+            $('edit-user-id').value = id;
+            $('edit-user-name').value = name || '';
+            $('edit-user-email').value = email || '';
+            $('edit-user-status').value = status || 'active';
+            
+            if (activatedAt && activatedAt.toDate) {
+                var d = activatedAt.toDate();
+                $('edit-user-act-date').value = d.toISOString().split('T')[0];
+            } else {
+                $('edit-user-act-date').value = '';
+            }
+
+            var l = lic[licenseId];
+            $('edit-user-days').value = l ? l.days : 30;
+
+            $('user-edit-modal').style.display = 'flex';
+        }
+        function closeUserEditModal() { $('user-edit-modal').style.display = 'none'; }
+
+        function openGrantModal(userId) {
+            $('grant-user-id').value = userId;
+            $('grant-modal').style.display = 'flex';
+        }
+        function closeGrantModal() { $('grant-modal').style.display = 'none'; }
+
+        function openRevealModal(code, hashId) {
+            var finalCode = (code && code !== "undefined" && code !== "null" && code !== "") ? code : "LEGACY-" + hashId.slice(0, 8).toUpperCase();
+            
+            $('reveal-code-text').innerText = finalCode;
+            $('reveal-hash-text').innerText = "Hash ID: " + hashId;
+            
+            $('reveal-copy-btn').onclick = function() {
+                copyToClipboard(finalCode);
+                closeRevealModal();
+            };
+
+            $('reveal-wa-btn').onclick = function() {
+                var waText = encodeURIComponent("Hello! Here is your Pregnify Pro Premium License Code: *" + finalCode + "* \nActivate it inside your app to enjoy unlimited features!");
+                window.open("https://wa.me/?text=" + waText, "_blank");
+            };
+
+            $('reveal-modal').style.display = 'flex';
+        }
+        function closeRevealModal() { $('reveal-modal').style.display = 'none'; }
+
+        // Live Preview for Broadcast Notice
+        function updateBroadcastPreview() {
+            var title = $('bc-title').value.trim();
+            var msg = $('bc-msg').value.trim();
+            
+            $('prev-title').innerText = title ? title : "Special Notice Title";
+            $('prev-msg').innerText = msg ? msg : "Your broadcast message preview will appear here in real-time as you type above...";
+        }
+
+        // Custom Package Handler
+        function handlePackageSelection() {
+            var val = $('days').value;
+            if(val === 'custom') {
+                openCustomPkgModal();
+            } else if(val == '30') { $('price').value = 500; }
+            else if(val == '90') { $('price').value = 1200; }
+            else if(val == '180') { $('price').value = 2200; }
+            else if(val == '365') { $('price').value = 4000; }
+            else if(val == '36500') { $('price').value = 10000; }
+        }
+
+        function saveCustomPackage() {
+            var days = $('custom-pkg-days').value.trim();
+            var price = $('custom-pkg-price').value.trim();
+
+            if(!days || !price) {
+                alert("Please enter valid duration and price.");
+                return;
+            }
+
+            var select = $('days');
+            var opt = document.createElement('option');
+            opt.value = days;
+            opt.text = days + ' Days (Custom)';
+            select.insertBefore(opt, select.lastElementChild);
+            select.value = days;
+            $('price').value = price;
+            closeCustomPkgModal();
+        }
+
+        // Login / Logout Handlers
+        var handleLogin = function() {
+            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(err) { alert('Login failed: ' + err.message); });
+        };
+        $('lg').onclick = handleLogin;
+        $('lg-top').onclick = function() { auth.signOut(); };
+
+        auth.onAuthStateChanged(function(u) {
+            $('auth-screen').style.display = u ? 'none' : 'flex';
+            $('app').style.display = u ? 'block' : 'none';
+            $('bottom-nav').style.display = u ? 'grid' : 'none';
+            $('who').textContent = u ? u.email.split('@')[0] : '';
+            if (u) { loadAllData(); }
+        });
+
+        // Load All Data & Update Dashboard Stats & Revenue Chart
+        async function loadAllData() {
+            await Promise.all([lu(), ll(), lp()]);
+            updateStats();
+        }
+
+        let revenueChartInstance = null;
+
+        async function updateStats() {
+            try {
+                var licSnap = await db.collection('licenses').get();
+                var userSnap = await db.collection('users').get();
+                var promoSnap = await db.collection('promo_codes').get();
+                
+                var totalLic = licSnap.size + promoSnap.size;
+                var unusedLic = 0;
+                var activeUsers = 0;
+                var blockedCount = 0;
+                var totalRevenue = 0;
+                var monthRevenue = 0;
+
+                var currentMonth = new Date().getMonth();
+                var currentYear = new Date().getFullYear();
+                var monthlyMap = {};
+
+                licSnap.forEach(doc => { 
+                    var data = doc.data();
+                    if(data.status === 'unused') unusedLic++; 
+                    if(data.status === 'blocked') blockedCount++;
+                    
+                    var netPaid = (parseFloat(data.price) || 0) - (parseFloat(data.discount) || 0);
+                    if(netPaid > 0) totalRevenue += netPaid;
+
+                    if(data.createdAt && data.createdAt.toDate) {
+                        var cDate = data.createdAt.toDate();
+                        let mKey = cDate.toLocaleString('default', { month: 'short', year: '2-digit' });
+                        monthlyMap[mKey] = (monthlyMap[mKey] || 0) + netPaid;
+
+                        if(cDate.getMonth() === currentMonth && cDate.getFullYear() === currentYear) {
+                            monthRevenue += netPaid;
+                        }
+                    }
+                });
+
+                promoSnap.forEach(doc => {
+                    var data = doc.data();
+                    if(data.status === 'active') unusedLic++;
+                });
+
+                userSnap.forEach(doc => { 
+                    var data = doc.data();
+                    if(data.status === 'active') activeUsers++;
+                    if(data.status === 'blocked') blockedCount++;
+                });
+
+                $('stat-total-lic').innerText = totalLic;
+                $('stat-unused-lic').innerText = unusedLic;
+                $('stat-active-users').innerText = activeUsers;
+                $('stat-blocked-count').innerText = blockedCount;
+                $('stat-total-revenue').innerText = '৳' + totalRevenue.toLocaleString();
+                $('stat-month-revenue').innerText = '৳' + monthRevenue.toLocaleString();
+
+                renderRevenueChart(monthlyMap);
+            } catch(e) {
+                console.error("Stats error:", e);
+            }
+        }
+
+        function renderRevenueChart(dataMap) {
+            var ctx = document.getElementById('revenueChart').getContext('2d');
+            var labels = Object.keys(dataMap);
+            var values = Object.values(dataMap);
+
+            if(labels.length === 0) {
+                labels = ['No Data'];
+                values = [0];
+            }
+
+            if(revenueChartInstance) {
+                revenueChartInstance.destroy();
+            }
+
+            revenueChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue (৳)',
+                        data: values,
+                        backgroundColor: '#4f46e5',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // License Generator Handler
+        $('gen').onclick = async function() {
+            var n = +$('qty').value, d = +$('days').value, price = parseFloat($('price').value) || 0, discount = parseFloat($('discount').value) || 0, o = [];
+            for (var i = 0; i < n; i++) {
+                var code = rnd();
+                var hashId = await sha(code);
+                await db.collection('licenses').doc(hashId).set({
+                    code: code,
+                    days: d,
+                    price: price,
+                    discount: discount,
+                    status: 'unused',
+                    boundTo: null,
+                    note: $('note').value || 'General License',
+                    createdAt: FV.serverTimestamp()
+                });
+                o.push(code);
+            }
+            $('out').value = o.join('\n');
+            loadAllData();
+        };
+
+        // Special Promo Code Generator Handler (Isolated)
+        $('gen-promo').onclick = async function() {
+            var code = $('promo-code-input').value.trim().toUpperCase();
+            var discount = parseFloat($('promo-discount').value) || 0;
+            var reason = $('promo-reason').value.trim() || 'Special Campaign';
+
+            if(!code) {
+                alert("Please enter a valid promo code.");
+                return;
+            }
+
+            try {
+                await db.collection('promo_codes').doc(code).set({
+                    code: code,
+                    discount: discount,
+                    reason: reason,
+                    status: 'active',
+                    createdAt: FV.serverTimestamp()
+                });
+                $('promo-code-input').value = '';
+                $('promo-reason').value = '';
+                alert("✅ Promo code created successfully!");
+                lp();
+                updateStats();
+            } catch(e) {
+                alert("❌ Failed: " + e.message);
+            }
+        };
+
+        // Load Special Promo Codes Table
+        async function lp() {
+            var s = await db.collection('promo_codes').get();
+            var h = '<tr><th>Code</th><th>Disc.</th><th>Reason</th><th>Act</th></tr>';
+            
+            if(s.empty) {
+                h += '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No promo codes found.</td></tr>';
+            } else {
+                s.forEach(function(d) {
+                    var p = d.data();
+                    h += '<tr>' +
+                        '<td><b>' + esc(p.code) + '</b></td>' +
+                        '<td>৳' + (p.discount || 0) + '</td>' +
+                        '<td>' + esc(p.reason) + '</td>' +
+                        '<td><button class="btn-danger" data-pa="pdel" data-id="' + d.id + '" style="padding:4px 8px; font-size:0.7em;">Del</button></td>' +
+                        '</tr>';
+                });
+            }
+            $('promo-table').innerHTML = h;
+        }
+
+        var lic = {};
+
+        // Load Users Table with Expiry Countdown & User Edit support
+        async function lu() {
+            var s = await db.collection('users').get();
+            var searchTxt = $('user-search').value.toLowerCase().trim();
+            var h = '<tr><th>User</th><th>Status</th><th>Expiry & Countdown</th><th>Action</th></tr>';
+            var ls = await db.collection('licenses').get();
+            ls.forEach(function(d) { lic[d.id] = d.data(); });
+            
+            s.forEach(function(d) {
+                var u = d.data();
+                var emailMatch = u.email && u.email.toLowerCase().includes(searchTxt);
+                var nameMatch = u.name && u.name.toLowerCase().includes(searchTxt);
+                
+                if(searchTxt && !emailMatch && !nameMatch) return;
+
+                var l = lic[u.licenseId];
+                var expDate = l && u.activatedAt ? new Date(u.activatedAt.toMillis() + ((l.days || 0) + (u.extraDays || 0)) * 864e5) : null;
+                
+                var expStr = "—";
+                if(expDate) {
+                    var diffDays = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
+                    if(diffDays > 0) {
+                        expStr = expDate.toLocaleDateString('en-GB') + ' <br><span class="badge exp-warn">' + diffDays + ' days left</span>';
+                    } else {
+                        expStr = expDate.toLocaleDateString('en-GB') + ' <br><span class="badge bad">Expired</span>';
+                    }
+                }
+
+                var statusBadgeClass = u.status == 'active' ? 'ok' : (u.status == 'pending' ? 'pending' : 'bad');
+
+                h += '<tr>' +
+                    '<td><b>' + esc(u.email ? u.email.split('@')[0] : 'No Email') + '</b><br><small>' + esc(u.name || 'User') + '</small></td>' +
+                    '<td><span class="badge ' + statusBadgeClass + '">' + esc(u.status || 'active') + '</span></td>' +
+                    '<td>' + expStr + '</td>' +
+                    '<td><div class="action-btns">' +
+                    '<button class="' + (u.status == 'active' ? 'btn-danger' : 'btn-success') + '" data-a="' + (u.status == 'active' ? 'block' : 'unblock') + '" data-id="' + d.id + '">' + (u.status == 'active' ? 'Block' : 'Unblock') + '</button>' +
+                    '<button class="btn-warning" data-a="uedit" data-id="' + d.id + '" data-name="' + esc(u.name || '') + '" data-email="' + esc(u.email || '') + '" data-status="' + esc(u.status || 'active') + '" data-activated="' + (u.activatedAt ? u.activatedAt.toMillis() : '') + '" data-lic="' + (u.licenseId || '') + '">Edit</button>' +
+                    '<button class="btn-secondary" data-a="reset" data-id="' + d.id + '" title="Force Logout">Logout</button>' +
+                    '<button class="btn-success" data-a="grant" data-id="' + d.id + '" title="Grant Premium Access">Grant</button>' +
+                    '</div></td></tr>';
+            });
+            $('ut').innerHTML = h;
+        }
+
+        // Load Licenses Table
+        async function ll() {
+            var s = await db.collection('licenses').get();
+            var searchTxt = $('lic-search').value.toLowerCase().trim();
+            var filterVal = $('lic-filter').value;
+            var h = '<tr><th>License Code</th><th>Valid</th><th>Net Price</th><th>Status</th><th>Note</th><th>Action</th></tr>';
+            
+            s.forEach(function(d) {
+                var l = d.data();
+                lic[d.id] = l;
+                
+                var plainCode = l.code ? l.code : "LEGACY-" + d.id.slice(0, 8).toUpperCase();
+
+                if(filterVal !== 'all' && l.status !== filterVal) return;
+                if(searchTxt && !l.note.toLowerCase().includes(searchTxt) && !plainCode.toLowerCase().includes(searchTxt)) return;
+
+                var netPrice = (l.price || 0) - (l.discount || 0);
+
+                h += '<tr>' +
+                    '<td>' +
+                        '<div style="display:flex; align-items:center; gap:6px;">' +
+                            '<button class="btn-eye" onclick="openRevealModal(\'' + esc(plainCode) + '\', \'' + d.id + '\')" title="View & Copy License"><span class="material-icons" style="font-size:14px; vertical-align:middle;">visibility</span> View</button>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td><b>' + l.days + 'd</b></td>' +
+                    '<td>৳' + netPrice + '</td>' +
+                    '<td><span class="badge ' + (l.status == 'unused' ? 'ok' : 'bad') + '">' + esc(l.status) + '</span></td>' +
+                    '<td>' + esc(l.note) + '</td>' +
+                    '<td><div class="action-btns">' +
+                    '<button class="btn-warning" data-a="ledit" data-id="' + d.id + '" data-note="' + esc(l.note || '') + '" data-days="' + l.days + '" data-price="' + (l.price || 0) + '" data-discount="' + (l.discount || 0) + '" data-status="' + l.status + '">Edit</button>' +
+                    '<button class="btn-danger" data-a="lblock" data-id="' + d.id + '">Block</button>' +
+                    '<button class="btn-secondary" data-a="ldel" data-id="' + d.id + '">Del</button>' +
+                    '</div></td></tr>';
+            });
+            $('lt').innerHTML = h;
+        }
+
+        // Save License Edit from Modal Popup
+        async function saveLicenseEdit() {
+            var id = $('edit-lic-id').value;
+            var note = $('edit-lic-note').value.trim();
+            var days = parseInt($('edit-lic-days').value);
+            var price = parseFloat($('edit-lic-price').value) || 0;
+            var discount = parseFloat($('edit-lic-discount').value) || 0;
+            var status = $('edit-lic-status').value;
+
+            if(!id) return;
+
+            try {
+                await db.collection('licenses').doc(id).update({
+                    note: note || 'General License',
+                    days: isNaN(days) ? 30 : days,
+                    price: price,
+                    discount: discount,
+                    status: status
+                });
+                closeEditModal();
+                loadAllData();
+                alert("✅ License updated successfully!");
+            } catch(e) {
+                alert("❌ Update failed: " + e.message);
+            }
+        }
+
+        // Save User Edit (Including Activation Date & Days Management)
+        async function saveUserEdit() {
+            var id = $('edit-user-id').value;
+            var name = $('edit-user-name').value.trim();
+            var email = $('edit-user-email').value.trim();
+            var status = $('edit-user-status').value;
+            var actDateStr = $('edit-user-act-date').value;
+            var days = parseInt($('edit-user-days').value) || 30;
+
+            if(!id) return;
+
+            try {
+                var updatePayload = {
+                    name: name,
+                    email: email,
+                    status: status
+                };
+
+                if (actDateStr) {
+                    updatePayload.activatedAt = firebase.firestore.Timestamp.fromDate(new Date(actDateStr));
+                }
+
+                await db.collection('users').doc(id).update(updatePayload);
+
+                var userDoc = await db.collection('users').doc(id).get();
+                if(userDoc.exists && userDoc.data().licenseId) {
+                    var licId = userDoc.data().licenseId;
+                    await db.collection('licenses').doc(licId).update({ days: days });
+                }
+
+                closeUserEditModal();
+                loadAllData();
+                alert("✅ User info & subscription updated successfully!");
+            } catch(e) {
+                alert("❌ User update failed: " + e.message);
+            }
+        }
+
+        // Confirm Grant Premium Access with Status & Duration
+        async function confirmGrantPremium() {
+            var userId = $('grant-user-id').value;
+            var days = parseInt($('grant-days-select').value);
+            var status = $('grant-status-select').value;
+            var note = $('grant-note').value.trim() || 'Admin Direct Grant';
+
+            if(!userId) return;
+
+            try {
+                var gid = 'grant_' + userId + '_' + Date.now();
+                await db.collection('licenses').doc(gid).set({
+                    code: 'ADMIN-GRANT',
+                    days: days,
+                    price: 0,
+                    discount: 0,
+                    status: 'used',
+                    boundTo: userId,
+                    note: note,
+                    createdAt: FV.serverTimestamp(),
+                    usedAt: FV.serverTimestamp()
+                });
+                await db.collection('users').doc(userId).update({
+                    licenseId: gid,
+                    activatedAt: FV.serverTimestamp(),
+                    status: status
+                });
+                closeGrantModal();
+                loadAllData();
+                alert("✅ Premium access successfully granted!");
+            } catch(e) {
+                alert("❌ Grant failed: " + e.message);
+            }
+        }
+
+        // Broadcast Notice Publisher Handler
+        async function sendBroadcastNotice() {
+            var title = $('bc-title').value.trim();
+            var msg = $('bc-msg').value.trim();
+
+            if(!title || !msg) {
+                alert("Please fill in both title and message.");
+                return;
+            }
+
+            try {
+                await db.collection('system_notices').doc('latest').set({
+                    title: title,
+                    message: msg,
+                    updatedAt: FV.serverTimestamp()
+                });
+                $('bc-title').value = '';
+                $('bc-msg').value = '';
+                updateBroadcastPreview();
+                alert("✅ Broadcast notice published successfully to all user apps!");
+            } catch(e) {
+                alert("❌ Failed to publish broadcast: " + e.message);
+            }
+        }
+
+        // CSV Export Helper Function
+        function exportTableToCSV(filename) {
+            var csv = [];
+            var rows = document.querySelectorAll("table tr");
+            
+            for (var i = 0; i < rows.length; i++) {
+                var row = [], cols = rows[i].querySelectorAll("td, th");
+                for (var j = 0; j < cols.length - 1; j++) {
+                    row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                }
+                csv.push(row.join(","));
+            }
+            
+            var csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+            var downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        // JSON Database Export (Backup)
+        async function exportDatabaseJSON() {
+            try {
+                var licSnap = await db.collection('licenses').get();
+                var userSnap = await db.collection('users').get();
+                var promoSnap = await db.collection('promo_codes').get();
+                
+                var licenses = {};
+                licSnap.forEach(doc => { licenses[doc.id] = doc.data(); });
+                
+                var users = {};
+                userSnap.forEach(doc => { users[doc.id] = doc.data(); });
+
+                var promo_codes = {};
+                promoSnap.forEach(doc => { promo_codes[doc.id] = doc.data(); });
+
+                var backupData = { licenses: licenses, users: users, promo_codes: promo_codes, exportedAt: new Date().toISOString() };
+                var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                
+                var dlAnchor = document.createElement('a');
+                dlAnchor.setAttribute("href", dataStr);
+                dlAnchor.setAttribute("download", "pregnify_backup_" + new Date().toISOString().slice(0,10) + ".json");
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                dlAnchor.remove();
+                closeSettingsModal();
+                alert("✅ Database backup downloaded successfully!");
+            } catch(e) {
+                alert("❌ Backup failed: " + e.message);
+            }
+        }
+
+        // JSON Database Import (Restore)
+        async function importDatabaseJSON(input) {
+            var file = input.files[0];
+            if (!file) return;
+
+            if (!confirm("⚠️ Warning: Restoring will overwrite existing Firestore records. Continue?")) {
+                input.value = "";
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    var content = JSON.parse(e.target.result);
+                    
+                    if (content.licenses) {
+                        for (var id in content.licenses) {
+                            await db.collection('licenses').doc(id).set(content.licenses[id], { merge: true });
+                        }
+                    }
+                    if (content.users) {
+                        for (var id in content.users) {
+                            await db.collection('users').doc(id).set(content.users[id], { merge: true });
+                        }
+                    }
+                    if (content.promo_codes) {
+                        for (var id in content.promo_codes) {
+                            await db.collection('promo_codes').doc(id).set(content.promo_codes[id], { merge: true });
+                        }
+                    }
+                    
+                    closeSettingsModal();
+                    alert("✅ Database successfully restored!");
+                    loadAllData();
+                } catch(err) {
+                    alert("❌ Invalid JSON format: " + err.message);
+                }
+                input.value = "";
+            };
+            reader.readAsText(file);
+        }
+
+        // Global Action Event Listener for Dynamic Buttons
+        document.addEventListener('click', async function(e) {
+            var a = e.target.dataset && e.target.dataset.a, id = e.target.dataset && e.target.dataset.id;
+            var pa = e.target.dataset && e.target.dataset.pa;
+
+            if (pa === 'pdel') {
+                if(confirm('Delete this promo code?')) {
+                    await db.collection('promo_codes').doc(id).delete();
+                    lp();
+                    updateStats();
+                }
+                return;
+            }
+
+            if (!a) return;
+            var U = db.collection('users').doc(id), L = db.collection('licenses').doc(id);
+            
+            if (a == 'block') await U.update({ status: 'blocked' });
+            if (a == 'unblock') await U.update({ status: 'active' });
+            if (a == 'reset') await U.update({ deviceId: null, deviceSwitches: 0 });
+            if (a == 'ext') await U.update({ extraDays: FV.increment(30) });
+            if (a == 'grant') {
+                openGrantModal(id);
+                return;
+            }
+            if (a == 'lblock') await L.update({ status: 'blocked' });
+            
+            if (a == 'ledit') {
+                var note = e.target.getAttribute('data-note');
+                var days = e.target.getAttribute('data-days');
+                var price = e.target.getAttribute('data-price');
+                var discount = e.target.getAttribute('data-discount');
+                var status = e.target.getAttribute('data-status');
+                openEditModal(id, note, days, price, discount, status);
+            }
+
+            if (a == 'uedit') {
+                var name = e.target.getAttribute('data-name');
+                var email = e.target.getAttribute('data-email');
+                var status = e.target.getAttribute('data-status');
+                var activated = e.target.getAttribute('data-activated');
+                var licId = e.target.getAttribute('data-lic');
+                
+                var actDateObj = activated ? new Date(parseInt(activated)) : null;
+                openUserEditModal(id, name, email, status, actDateObj ? { toDate: () => actDateObj } : null, licId);
+            }
+
+            if (a == 'ldel' && confirm('Delete this license?')) await L.delete();
+            
+            loadAllData();
+        });
+
+        // ===== Content Manager & Fixed Bulk Code Import Logic with Confirmation Popup =====
+        var CT = { drugs: ['content_drugs', 'name', function () { return typeof pedDrugsList != 'undefined' ? pedDrugsList : []; }],
+                   guides: ['content_guidelines', 'title', function () { return typeof guidelineDatabase != 'undefined' ? guidelineDatabase : []; }],
+                   diseases: ['content_diseases', 'title', function () { return typeof uniqueDiseaseDatabase != 'undefined' ? uniqueDiseaseDatabase : []; }] };
+        var cDocs = [], cEdit = null;
+        function cBump() { return db.collection('meta').doc('content').set({ v: Date.now() }); }
+        async function cLoad() { var k = $('c-type').value, s = await db.collection(CT[k][0]).orderBy('_o').get(); cDocs = s.docs; cRender(); }
+        function cRender() {
+            var q = $('c-q').value.toLowerCase(), h = '';
+            cDocs.forEach(function (d, i) { var t = d.data().t || ''; if (q && t.toLowerCase().indexOf(q) < 0) return;
+                h += '<div style="display:flex;justify-content:space-between;gap:6px;padding:6px 0;border-bottom:1px solid #eee;align-items:center;"><span style="font-size:.8em">' + esc(t) + '</span><span style="display:flex;gap:4px;"><button class="btn-secondary" data-c="e" data-i="' + i + '" style="padding:3px 8px;font-size:0.7em;">Edit</button> <button class="btn-danger" data-c="d" data-i="' + i + '" style="padding:3px 8px;font-size:0.7em;">Del</button></span></div>'; });
+            $('c-list').innerHTML = h || '<small>Empty — Click "Seed"</small>'; $('c-count').textContent = cDocs.length;
+        }
+        function cNew() {
+            cEdit = null; var t = cDocs.length ? JSON.parse(cDocs[0].data().json) : {};
+            Object.keys(t).forEach(function (x) { t[x] = typeof t[x] == 'number' ? 0 : typeof t[x] == 'boolean' ? false : Array.isArray(t[x]) ? [] : (t[x] && typeof t[x] == 'object') ? {} : ''; });
+            $('c-json').value = JSON.stringify(t, null, 2); $('c-ed').style.display = 'block';
+        }
+        async function cSave() {
+            var k = $('c-type').value, o; try { o = JSON.parse($('c-json').value); } catch (e) { return alert('Invalid JSON: ' + e.message); }
+            if (k == 'drugs' && !o.id) o.id = Date.now();
+            var t = String(o[CT[k][1]] || ''), col = db.collection(CT[k][0]);
+            if (cEdit) await col.doc(cEdit).update({ t: t, json: JSON.stringify(o) }); else await col.add({ t: t, json: JSON.stringify(o), _o: Date.now() });
+            await cBump(); $('c-ed').style.display = 'none'; cLoad();
+        }
+        async function cSeed() {
+            var k = $('c-type').value, b = CT[k][2](); if (!b.length) return alert('Base data not loaded');
+            if (!confirm(b.length + ' items will be uploaded to Firebase. Proceed?')) return;
+            for (var i = 0; i < b.length; i += 300) { var bt = db.batch();
+                b.slice(i, i + 300).forEach(function (x, j) { var n = i + j; bt.set(db.collection(CT[k][0]).doc('b' + String(n).padStart(5, '0')), { t: String(x[CT[k][1]] || ''), json: JSON.stringify(x), _o: n }); });
+                await bt.commit(); }
+            await cBump(); alert('✅ Seed completed'); cLoad();
+        }
+        async function cCodes() {
+            var rawText = $('c-codes').value.trim();
+            if(!rawText) {
+                alert("Please enter license codes in the text area.");
+                return;
+            }
+            var lines = rawText.split('\n');
+            var importedCount = 0;
+            
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if(!line) continue;
+                var p = line.split(/\s+/);
+                if (p.length < 2) continue;
+                var code = p[0].toUpperCase();
+                var days = parseInt(p[1]);
+                if (!code || isNaN(days)) continue;
+                
+                var hashId = await sha(code);
+                var ref = db.collection('licenses').doc(hashId);
+                var snap = await ref.get();
+                if (snap.exists) continue;
+
+                await ref.set({
+                    code: code,
+                    days: days,
+                    price: 0,
+                    discount: 0,
+                    status: 'unused',
+                    boundTo: null,
+                    note: 'Legacy Bulk',
+                    createdAt: FV.serverTimestamp()
+                });
+                importedCount++;
+            }
+            $('c-codes').value = '';
+            closeSettingsModal();
+            loadAllData();
+            
+            // Confirmation Popup with details
+            alert("🎉 Success! " + importedCount + " legacy license codes have been successfully imported into Firebase database.");
+        }
+        $('c-list').addEventListener('click', async function (e) {
+            var t = e.target, c = t.getAttribute('data-c'); if (!c) return; var d = cDocs[+t.getAttribute('data-i')];
+            if (c == 'e') { cEdit = d.id; $('c-json').value = JSON.stringify(JSON.parse(d.data().json), null, 2); $('c-ed').style.display = 'block'; }
+            if (c == 'd' && confirm('Delete item?')) { await d.ref.delete(); await cBump(); cLoad(); }
+        });
+
+        $('ru').onclick = loadAllData;
+        $('rl').onclick = loadAllData;
+    </script>
+</body>
+</html>
